@@ -15,17 +15,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import csv
 
-# Изменение стандартной кодировки ввода/вывода на UTF-8
+# Changing the default input/output encoding to UTF-8 | Изменение стандартной кодировки ввода/вывода на UTF-8
 sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding='utf-8')
 
 def random_sleep(minimum, maximum):
-    """Спать между minimum и maximum секундами."""
+    """Sleep between minimum and maximum seconds. | Спать между minimum и maximum секундами."""
     time.sleep(random.uniform(minimum, maximum))
 
 def create_chrome_driver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Работать в режиме headless для улучшения производительности
+    chrome_options.add_argument("--headless")  # Work in headless mode for improved performance | Работать в режиме headless для улучшения производительности
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -34,7 +34,7 @@ def create_chrome_driver():
     chrome_options.add_argument("--log-level=3")
     chrome_options.add_argument('--ignore-ssl-errors=yes')
     chrome_options.add_argument('--ignore-certificate-errors')
-    service = Service(executable_path=r'D:\Загрузки\chromedriver.exe')
+    service = Service(executable_path=r'D:\Загрузки\chromedriver.exe') # Path to ChromeDriver.exe | Путь до ChromeDriver.exe
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
@@ -49,7 +49,7 @@ def google_search_for_emails(driver, query):
     return list(email_addresses)
 
 def save_to_csv(data, filename):
-    """Сохранение данных в CSV."""
+    """Saving data to CSV. | Сохранение данных в CSV."""
     with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["number", "title", "description", "emails"])
         writer.writeheader()
@@ -57,7 +57,7 @@ def save_to_csv(data, filename):
             writer.writerow(entry)
 
 def save_to_json(data, filename):
-    """Сохранение данных в JSON."""
+    """Saving data to JSON. | Сохранение данных в JSON."""
     with open(filename, 'w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
 
@@ -66,25 +66,25 @@ def find_elements(soup, selector):
 
 def get_company_info_from_page(soup, selector_info, count):
     company_info = []
-    # Избегаем операции поиска элементов, если селектор контейнера не представлен
+    # Avoid the item search operation if the container selector is not represented | Избегаем операции поиска элементов, если селектор контейнера не представлен
     if "container" in selector_info:
         elements = soup.select(selector_info["container"])
-    else:  # Если селектор контейнера отсутствует, предполагаем, что все страница содержит данные
+    else:  # If there is no container selector, assume that the entire page contains data | Если селектор контейнера отсутствует, предполагаем, что все страница содержит данные
         elements = [soup]
     
     for element in elements:
         title_element = element.select_one(selector_info['title']) if "title" in selector_info else None
         desc_element = element.select_one(selector_info['desc']) if "desc" in selector_info else None
         
-        # Проверка наличия заголовка для продолжения поиска email
+        # Checking for a header to continue the email search | Проверка наличия заголовка для продолжения поиска email
         if not title_element:
             continue
         
-        title = title_element.get_text().strip() if title_element else 'Нет Заголовка'
-        desc = desc_element.get_text().strip() if desc_element else 'Нет Описания'
+        title = title_element.get_text().strip() if title_element else 'No Header | Нет Заголовка'
+        desc = desc_element.get_text().strip() if desc_element else 'No Description | Нет Описания'
         
         random_sleep(0.5, 2.0)
-        emails = google_search_for_emails(driver, title) if title != 'Нет Заголовка' else ['Заголовок не найден']
+        emails = google_search_for_emails(driver, title) if title != 'No Header | Нет Заголовка' else ['Title not found | Заголовок не найден']
         
         count += 1
         result = {
@@ -94,12 +94,12 @@ def get_company_info_from_page(soup, selector_info, count):
             "emails": emails
         }
         company_info.append(result)
-        print(json.dumps(result, ensure_ascii=False))  # Печать информации в JSON формате
+        print(json.dumps(result, ensure_ascii=False))  # Printing information in JSON format | Печать информации в JSON формате
         
     return company_info, count
 
 driver = create_chrome_driver()
-data_to_export = []  # Список для сохранения результатов
+data_to_export = []  # List for saving results | Список для сохранения результатов
 
 try:
     tower_urls = [
@@ -166,19 +166,19 @@ try:
         info, count = get_company_info_from_page(soup, tower["selector"], count)
         data_to_export.extend(info)
 
-    # Получение текущей даты для имен файлов
+    # Getting the current date for file names | Получение текущей даты для имен файлов
     date_string = datetime.now().strftime("%d_%m_%Y")
     json_filename = f"result_{date_string}.json"
     csv_filename = f"result_{date_string}.csv"
     
-    # Сохраняем данные в JSON
+    # Save data to JSON | Сохраняем данные в JSON
     save_to_json(data_to_export, json_filename)
     
-    # Сохраняем данные в CSV
+    # Saving data to CSV | Сохраняем данные в CSV
     save_to_csv(data_to_export, csv_filename)
 
 except Exception as e:
-    print(f"Произошла ошибка: {e}")
+    print(f"There's been an error | Произошла ошибка: {e}")
 
 finally:
     driver.quit()
